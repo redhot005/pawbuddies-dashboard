@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Pawbuddies</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#F6F6F7;--surface:#FFFFFF;--border:#E3E3E3;--border2:#EBEBEB;
+  --text:#1A1A1A;--sub:#6D7175;--muted:#8C9196;
+  --green:#008060;--green-bg:#F1F8F5;--green-light:#CEEADF;
+  --blue:#006FBB;--red:#D72C0D;--red-bg:#FFF4F4;
+  --orange:#B98900;--orange-bg:#FFF5EA;
+  --purple:#4B0082;--r:8px;--r2:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;padding-bottom:65px}
+@media(min-width:768px){body{padding-bottom:0;padding-left:220px}}
+
+/* SIDEBAR - desktop */
+.sidebar{display:none;position:fixed;left:0;top:0;bottom:0;width:220px;background:#1A1A1A;z-index:100;flex-direction:column;padding:0}
+@media(min-width:768px){.sidebar{display:flex}}
+.sb-logo{padding:20px 16px 16px;border-bottom:1px solid #2D2D2D;display:flex;align-items:center;gap:10px}
+.sb-logo-icon{width:32px;height:32px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sb-logo-text{font-size:14px;font-weight:700;color:#fff}
+.sb-logo-sub{font-size:10px;color:#888}
+.sb-nav{flex:1;padding:12px 8px;overflow-y:auto}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;cursor:pointer;color:#B5B5B5;font-size:13px;font-weight:500;transition:.15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.sb-item:hover{background:#2D2D2D;color:#fff}
+.sb-item.active{background:#2D2D2D;color:#fff}
+.sb-item .si{font-size:15px;width:20px;text-align:center}
+.sb-section{font-size:10px;font-weight:700;color:#555;padding:12px 10px 4px;text-transform:uppercase;letter-spacing:.6px}
+.sb-bottom{padding:12px 8px;border-top:1px solid #2D2D2D}
+.sb-sync{width:100%;background:var(--green);color:#fff;border:none;padding:10px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s}
+.sb-sync:hover{background:#006B50}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+@media(min-width:768px){.topbar{padding:10px 24px}}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-logo{display:flex;align-items:center;gap:8px}
+@media(min-width:768px){.topbar-logo{display:none}}
+.topbar-logo-icon{width:28px;height:28px;background:var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.topbar-logo-text{font-size:14px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:8px}
+#sync-status{font-size:11px;color:var(--muted);display:none}
+@media(min-width:768px){#sync-status{display:block}}
+.topbar-sync{background:var(--green);color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+#clock-display{font-size:11px;color:var(--muted);display:none}
+@media(min-width:768px){#clock-display{display:block}}
+
+/* DATE TABS */
+.date-tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;gap:0;overflow-x:auto}
+.date-tabs::-webkit-scrollbar{display:none}
+@media(min-width:768px){.date-tabs{padding:0 24px}}
+.dt{border:none;background:none;padding:12px 14px;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-family:inherit;transition:.15s}
+.dt.active{color:var(--green);border-bottom:2px solid var(--green);font-weight:600}
+.dt-custom{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
+.dt-input{border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface)}
+
+/* BOTTOM NAV - mobile */
+.bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:100;padding:0}
+@media(min-width:768px){.bottom-nav{display:none}}
+.bn-item{flex:1;border:none;background:none;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:9px;font-weight:600;cursor:pointer;font-family:inherit}
+.bn-item .bni{font-size:20px}
+.bn-item.active{color:var(--green)}
+
+/* CONTENT */
+.content{padding:16px;max-width:1400px;margin:0 auto}
+@media(min-width:768px){.content{padding:20px 24px}}
+.page{display:none}.page.active{display:block}
+
+/* PAGE HEADER */
+.page-hdr{margin-bottom:20px}
+.page-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:2px}
+.page-sub{font-size:13px;color:var(--muted)}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px}
+.g4{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+@media(min-width:640px){.g4{grid-template-columns:repeat(4,1fr)}}
+.g-charts{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:16px}
+@media(min-width:900px){.g-charts{grid-template-columns:3fr 2fr}}
+.g-2col{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:16px}
+@media(min-width:768px){.g-2col{grid-template-columns:1fr 1fr}}
+
+/* CARD */
+.card{background:var(--surface);border-radius:var(--r2);border:1px solid var(--border);padding:16px}
+@media(min-width:768px){.card{padding:20px}}
+.card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px}
+.card-sub{font-size:12px;color:var(--muted);margin-bottom:12px}
+
+/* KPI CARDS */
+.kpi-card{background:var(--surface);border-radius:var(--r2);border:1px solid var(--border);padding:16px 18px}
+.kpi-label{font-size:12px;font-weight:500;color:var(--sub);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.kpi-value{font-size:24px;font-weight:700;color:var(--text);line-height:1;margin-bottom:4px}
+.kpi-change{font-size:12px;color:var(--muted)}
+.kpi-badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px}
+.kpi-badge.up{color:var(--green);background:var(--green-bg)}
+.kpi-badge.down{color:var(--red);background:var(--red-bg)}
+.kpi-badge.neu{color:var(--orange);background:var(--orange-bg)}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:480px}
+th{padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--sub);background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--border2);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFAFA}
+.tr{text-align:right}
+.tf td{background:#F6F6F7;font-weight:600;border-top:2px solid var(--border)}
+
+/* STATUS BADGES */
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.b-green{color:#008060;background:#CEEADF}
+.b-yellow{color:#916A00;background:#FFEA8A}
+.b-red{color:#D72C0D;background:#FEDAD5}
+.b-blue{color:#006FBB;background:#EBF5FA}
+.b-gray{color:#6D7175;background:#F6F6F7;border:1px solid var(--border)}
+
+/* P&L */
+.pl-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:6px}
+.pl-row.alt{background:var(--bg)}
+.pl-row:hover{background:var(--bg)}
+.pl-total{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--green-bg);border-radius:8px;border:1px solid var(--green-light);margin-top:10px}
+
+/* METRIC ROW */
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border2)}
+.mrow:last-child{border:none}
+
+/* BTN */
+.btn{padding:9px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid transparent;transition:.15s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-primary:hover{background:#006B50}
+.btn-secondary{background:var(--surface);color:var(--text);border-color:var(--border)}
+.btn-secondary:hover{background:var(--bg)}
+.inp{border:1px solid var(--border);border-radius:6px;padding:9px 12px;font-size:13px;font-family:inherit;background:var(--surface);color:var(--text);width:100%}
+.inp:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 2px var(--green-light)}
+.inp::placeholder{color:var(--muted)}
+select.inp{cursor:pointer}
+
+/* REMIT CARD */
+.remit-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-bottom:10px}
+.progress-bar{background:var(--border);border-radius:20px;height:4px;margin:10px 0;overflow:hidden}
+.progress-fill{height:100%;border-radius:20px;transition:.5s}
+
+/* MSG */
+.msg{padding:10px 14px;border-radius:6px;font-size:12px;font-weight:500;margin-top:8px}
+.mok{color:var(--green);background:var(--green-bg);border:1px solid var(--green-light)}
+.merr{color:var(--red);background:var(--red-bg);border:1px solid #FEDAD5}
+.minfo{color:var(--blue);background:#EBF5FA;border:1px solid #B4D6EE}
+
+/* MODAL */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:flex-end;justify-content:center}
+.modal.open{display:flex}
+@media(min-width:600px){.modal{align-items:center}}
+.modal-box{background:var(--surface);border-radius:12px 12px 0 0;padding:20px;width:100%;max-width:520px}
+@media(min-width:600px){.modal-box{border-radius:12px;margin:16px}}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:6px}
+.modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);margin-top:-2px}
+
+/* PROFIT CALC */
+.calc-table{width:100%;border-collapse:collapse;min-width:560px}
+.calc-table th{background:#1A1A1A;color:#fff;padding:10px 12px;font-size:11px;font-weight:600;text-align:center}
+.calc-table th:first-child{text-align:left}
+.calc-table td{padding:9px 12px;border-bottom:1px solid var(--border2);font-size:12px;text-align:center}
+.calc-table td:first-child{text-align:left;font-weight:500;color:var(--sub)}
+.calc-table tr.section td{background:var(--green-bg);font-weight:700;color:var(--green)}
+.calc-table tr.section td:first-child{color:var(--green)}
+.calc-table .pos{color:var(--green);font-weight:700}
+.calc-table .neg{color:var(--red)}
+
+/* TOAST */
+#toast{position:fixed;bottom:75px;left:50%;transform:translateX(-50%) translateY(10px);background:#1A1A1A;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:.25s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(min-width:768px){#toast{bottom:20px}}
+
+/* SECTION EMPTY */
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty .e-icon{font-size:36px;margin-bottom:10px}
+.empty .e-text{font-size:13px}
+
+/* RANGE PILL */
+#range-pill{font-size:11px;font-weight:600;color:var(--green);background:var(--green-bg);padding:3px 10px;border-radius:20px;margin-left:8px;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR (desktop) -->
+<div class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">🐾</div>
+    <div><div class="sb-logo-text">Pawbuddies</div><div class="sb-logo-sub">Business Dashboard</div></div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-section">Analytics</div>
+    <button class="sb-item active" onclick="showTab('exec',this)"><span class="si">📊</span>Overview</button>
+    <button class="sb-item" onclick="showTab('daily',this)"><span class="si">📅</span>Daily P&L</button>
+    <button class="sb-item" onclick="showTab('channel',this)"><span class="si">🏪</span>By Channel</button>
+    <button class="sb-item" onclick="showTab('products',this)"><span class="si">📦</span>Products</button>
+    <div class="sb-section">Tools</div>
+    <button class="sb-item" onclick="showTab('calc',this)"><span class="si">🧮</span>Profit Calc</button>
+    <button class="sb-item" onclick="showTab('ads',this)"><span class="si">📣</span>Ads Manager</button>
+    <button class="sb-item" onclick="showTab('remit',this)"><span class="si">🏦</span>Remittances</button>
+    <button class="sb-item" onclick="showTab('settings',this)"><span class="si">⚙️</span>Settings</button>
+  </div>
+  <div class="sb-bottom">
+    <button class="sb-sync" onclick="openModal()">⚡ Sync Pancake POS</button>
+    <div id="sb-status" style="font-size:10px;color:#888;margin-top:6px;text-align:center"></div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">🐾</div>
+      <span class="topbar-logo-text">Pawbuddies</span>
+    </div>
+    <span id="range-pill"></span>
+  </div>
+  <div class="topbar-right">
+    <div id="clock-display"></div>
+    <span id="sync-status"></span>
+    <button class="topbar-sync" onclick="openModal()">⚡ Sync</button>
+  </div>
+</div>
+
+<!-- DATE TABS -->
+<div class="date-tabs">
+  <button class="dt" onclick="setPreset('today',this)">Today</button>
+  <button class="dt" onclick="setPreset('yesterday',this)">Yesterday</button>
+  <button class="dt" onclick="setPreset('7d',this)">7 Days</button>
+  <button class="dt active" onclick="setPreset('30d',this)">30 Days</button>
+  <button class="dt" onclick="setPreset('mtd',this)">This Month</button>
+  <button class="dt" onclick="setPreset('custom',this)">Custom</button>
+  <div class="dt-custom" id="custom-inputs" style="display:none">
+    <input type="date" id="df" class="dt-input" onchange="customRange()"/>
+    <span style="color:var(--muted);font-size:11px">→</span>
+    <input type="date" id="dt2" class="dt-input" onchange="customRange()"/>
+  </div>
+</div>
+
+<!-- SYNC MODAL -->
+<div class="modal" id="syncModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-title">⚡ Sync Pawbuddies Data</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Paste your Google Apps Script Web App URL to pull live Pancake POS data.</p>
+    <input id="webAppUrl" class="inp" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom:10px"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="syncData()" style="flex:1">Sync Now</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+    <div id="main-msg"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV (mobile) -->
+<div class="bottom-nav">
+  <button class="bn-item active" onclick="showTab('exec',this)"><span class="bni">📊</span>Overview</button>
+  <button class="bn-item" onclick="showTab('daily',this)"><span class="bni">📅</span>Daily</button>
+  <button class="bn-item" onclick="showTab('channel',this)"><span class="bni">🏪</span>Channel</button>
+  <button class="bn-item" onclick="showTab('products',this)"><span class="bni">📦</span>Products</button>
+  <button class="bn-item" onclick="showTab('ads',this)"><span class="bni">📣</span>Ads</button>
+  <button class="bn-item" onclick="showTab('remit',this)"><span class="bni">🏦</span>Remit</button>
+  <button class="bn-item" onclick="showTab('settings',this)"><span class="bni">⚙️</span>More</button>
+</div>
+
+<div class="content">
+
+<!-- ── OVERVIEW ── -->
+<div id="page-exec" class="page active">
+  <div class="page-hdr"><div class="page-title">Overview</div><div class="page-sub" id="page-sub">Showing last 30 days</div></div>
+  <div class="g4" id="exec-kpis"></div>
+  <div class="g-charts">
+    <div class="card"><div class="card-title">Revenue by Platform</div><canvas id="barChart" height="200"></canvas></div>
+    <div class="card"><div class="card-title">Sales Distribution</div><canvas id="pieChart" height="200"></canvas></div>
+  </div>
+  <div class="g-2col">
+    <div class="card"><div class="card-title">P&L Summary</div><div id="pl-rows"></div></div>
+    <div class="card"><div class="card-title">Key Metrics</div><div id="exec-metrics"></div></div>
+  </div>
+</div>
+
+<!-- ── DAILY P&L ── -->
+<div id="page-daily" class="page">
+  <div class="page-hdr"><div class="page-title">Daily P&L</div><div class="page-sub">Profit and loss per day</div></div>
+  <div class="g4" id="daily-kpis"></div>
+  <div class="card">
+    <div class="card-title">Daily Profit & Loss Statement</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Date</th><th class="tr">Orders</th><th class="tr">Revenue</th><th class="tr">COGS</th><th class="tr">Fees</th><th class="tr">Ads*</th><th class="tr">Fixed</th><th class="tr">Net Profit</th><th class="tr">Margin</th></tr></thead>
+      <tbody id="daily-body"></tbody>
+    </table></div>
+    <p style="font-size:11px;color:var(--muted);margin-top:10px">* Ad spend divided equally across days in selected range.</p>
+  </div>
+</div>
+
+<!-- ── CHANNEL ── -->
+<div id="page-channel" class="page">
+  <div class="page-hdr"><div class="page-title">Channel P&L</div><div class="page-sub">Compare performance across all sales channels</div></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">Channel-by-Channel Breakdown</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Metric</th><th class="tr">Shopee</th><th class="tr">Lazada</th><th class="tr">TikTok</th><th class="tr">Webcake</th><th class="tr">Pancake</th><th class="tr" style="color:var(--green)">Total</th></tr></thead>
+      <tbody id="channel-body"></tbody>
+    </table></div>
+  </div>
+  <div class="g-2col">
+    <div class="card"><div class="card-title">Gross Profit by Channel</div><canvas id="channelBar" height="220"></canvas></div>
+    <div class="card"><div class="card-title">Margin % by Channel</div><canvas id="marginBar" height="220"></canvas></div>
+  </div>
+</div>
+
+<!-- ── PRODUCTS ── -->
+<div id="page-products" class="page">
+  <div class="page-hdr"><div class="page-title">Products</div><div class="page-sub">Performance rankings by gross profit</div></div>
+  <div class="card">
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>#</th><th>Product</th><th class="tr">Units</th><th class="tr">Revenue</th><th class="tr">COGS</th><th class="tr">Gross Profit</th><th class="tr">Margin</th><th>Status</th></tr></thead>
+      <tbody id="product-body"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ── PROFIT CALC ── -->
+<div id="page-calc" class="page">
+  <div class="page-hdr"><div class="page-title">Profit Calculator</div><div class="page-sub">Based on your verified March 2026 fee structure</div></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="g2" style="max-width:380px;margin-bottom:20px">
+      <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:5px;color:var(--sub)">Selling Price (₱)</label><input id="calc-price" type="number" class="inp" value="455" oninput="renderCalc()"/></div>
+      <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:5px;color:var(--sub)">COGS per Unit (₱)</label><input id="calc-cogs" type="number" class="inp" value="158.83" oninput="renderCalc()"/></div>
+    </div>
+    <div class="tbl-wrap"><table class="calc-table" id="calc-table"></table></div>
+  </div>
+  <div class="card">
+    <div class="card-title">COGS Database</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>SKU</th><th>Product</th><th class="tr">Purchase</th><th class="tr">Shipping</th><th class="tr">Packaging</th><th class="tr">Landed COGS</th><th>Supplier</th></tr></thead>
+      <tbody id="cogs-body"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ── ADS ── -->
+<div id="page-ads" class="page">
+  <div class="page-hdr"><div class="page-title">Ads Manager</div><div class="page-sub">Live Meta Ads performance</div></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">Meta Ads Connection</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;color:var(--sub)">Access Token</label><input id="metaToken" type="password" class="inp" placeholder="EAABsb..."/></div>
+      <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;color:var(--sub)">Ad Account ID</label><input id="metaAcct" type="text" class="inp" value="873451116977554"/></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end">
+      <div style="flex:1"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;color:var(--sub)">Period</label>
+        <select id="metaPeriod" class="inp">
+          <option value="today">Today</option><option value="yesterday">Yesterday</option>
+          <option value="this_week_sun_today">This Week</option><option value="this_month">This Month</option>
+          <option value="last_7d">Last 7 Days</option><option value="last_30d" selected>Last 30 Days</option>
+        </select></div>
+      <button class="btn btn-primary" onclick="fetchMeta()" style="white-space:nowrap">Connect</button>
+    </div>
+    <div id="ads-msg"></div>
+  </div>
+  <div class="g4" id="ads-kpis" style="margin-bottom:14px"></div>
+  <div class="card"><div class="card-title">Campaign Breakdown</div>
+    <div class="tbl-wrap"><table><thead><tr><th>Campaign</th><th class="tr">Spend</th><th class="tr">Impressions</th><th class="tr">Clicks</th><th class="tr">CTR</th><th class="tr">Purchases</th><th class="tr">CPA</th><th class="tr">ROAS</th></tr></thead>
+    <tbody id="campaign-body"><tr><td colspan="8"><div class="empty"><div class="e-icon">📣</div><div class="e-text">Connect your Meta Ads account above</div></div></td></tr></tbody></table></div>
+  </div>
+</div>
+
+<!-- ── REMITTANCES ── -->
+<div id="page-remit" class="page">
+  <div class="page-hdr"><div class="page-title">Remittances</div><div class="page-sub">Track expected and received remittances</div></div>
+  <div class="g3" id="remit-kpis" style="margin-bottom:16px"></div>
+  <div id="remit-cards"></div>
+</div>
+
+<!-- ── SETTINGS ── -->
+<div id="page-settings" class="page">
+  <div class="page-hdr"><div class="page-title">Settings</div></div>
+  <div class="g-2col">
+    <div class="card">
+      <div class="card-title">Business Settings</div>
+      <div style="margin-bottom:16px"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:5px;color:var(--sub)">Monthly Fixed Costs (₱)</label>
+        <input id="fixedMonthly" type="number" class="inp" value="148839" oninput="render()"/>
+        <p style="font-size:11px;color:var(--muted);margin-top:4px">Daily: <strong id="daily-alloc">₱4,961</strong></p></div>
+      <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:5px;color:var(--sub)">Other Expenses (₱)</label>
+        <input id="otherExp" type="number" class="inp" value="0" oninput="render()"/></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Fixed Cost Breakdown</div>
+      ${[["Staff Salaries","94,448","3,148"],["Webcake Subscription","584","19"],["Pancake POS","367","12"],["Internet + Utilities","3,800","127"],["Food for Packers","16,640","555"],["AI Subscriptions","16,000","533"],["Bookkeeper","5,000","167"],["Accountant","7,000","233"],["Miscellaneous","5,000","167"]].map(r=>`<div class="mrow"><span style="font-size:13px;color:var(--sub)">${r[0]}</span><div style="text-align:right"><div style="font-size:13px;font-weight:600">₱${r[1]}</div><div style="font-size:11px;color:var(--muted)">₱${r[2]}/day</div></div></div>`).join("")}
+      <div class="mrow" style="margin-top:6px"><span style="font-weight:700">Total</span><div style="text-align:right"><div style="font-size:16px;font-weight:800;color:var(--green)">₱148,839</div><div style="font-size:11px;color:var(--muted)">₱4,961/day</div></div></div>
+    </div>
+  </div>
+</div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+const PLATFORMS=["Shopee","Lazada","TikTok Shop","Webcake","Pancake POS"];
+const PC={Shopee:"#EE4D2D",Lazada:"#003087","TikTok Shop":"#010101",Webcake:"#5C6AC4","Pancake POS":"#F59E0B"};
+const FEES_CALC={"Shopee 1 (SouthPack)":{rate:.2257,selling:455},"Shopee 2 (PetBuddies)":{rate:.1890,selling:455},"Lazada":{rate:.1224,selling:455},"TikTok Shop":{rate:.0854,selling:455},"Website (Webcake)":{rate:.0300,selling:395}};
+const COGS_DB=[
+  {sku:"Parvo Protect 1L",name:"PARVO PROTECT",purchase:93,shipping:58,packaging:8,landed:158.83,supplier:"Vifei"},
+  {sku:"PARVO-3L",name:"Bundle of 3 Parvo Protect",purchase:279,shipping:58,packaging:24,landed:361.00,supplier:"Vifei"},
+  {sku:"PARVO-2L",name:"Bundle of 2 Parvo Protect",purchase:186,shipping:58,packaging:15,landed:259.00,supplier:"Vifei"},
+  {sku:"Summer Fruity",name:"Odor Protect Summer Fruity",purchase:170,shipping:58,packaging:5,landed:232.86,supplier:"Happy Life"},
+  {sku:"Passion Fruit",name:"Odor Protect Passion Fruit",purchase:170,shipping:58,packaging:5,landed:233.26,supplier:"Happy Life"},
+  {sku:"WTRS-CM",name:"Waterless Shampoo Cucumber Mint",purchase:201,shipping:58,packaging:5,landed:264.31,supplier:"Happy Life"},
+  {sku:"WTRS-LV",name:"Waterless Shampoo Lavender",purchase:201,shipping:58,packaging:5,landed:264.31,supplier:"Happy Life"},
+  {sku:"PRVOPTCT4L",name:"Parvo Protect 4 Liters",purchase:260,shipping:58,packaging:20,landed:338.15,supplier:"Vifei"},
+  {sku:"CUDDLE COLOG",name:"Cuddle Cologne 50ml",purchase:48,shipping:58,packaging:3,landed:109.31,supplier:"Vifei"},
+  {sku:"PARVO+ODORD",name:"Dual Home Protection Set",purchase:263,shipping:58,packaging:13,landed:334.00,supplier:"Happy Life+Vifei"},
+  {sku:"FRESHEXPERIEN",name:"The Fresh Experience Set",purchase:371,shipping:58,packaging:10,landed:439.00,supplier:"Happy Life+Vifei"},
+  {sku:"FULLDEFENSECOL",name:"The Full Defense Collection",purchase:263,shipping:58,packaging:18,landed:339.00,supplier:"Happy Life+Vifei"},
+];
+
+let DATA=null,META={spend:0,impressions:0,clicks:0,reach:0,purchases:0,campaigns:[],synced:false};
+let REMIT=[
+  {id:1,source:"Shopee Express VIP",expected:0,dateExp:"",received:0,dateRec:""},
+  {id:2,source:"J&T VIP",expected:0,dateExp:"",received:0,dateRec:""},
+  {id:3,source:"Shopee Remittance",expected:0,dateExp:"",received:0,dateRec:""},
+  {id:4,source:"Lazada Remittance",expected:0,dateExp:"",received:0,dateRec:""},
+  {id:5,source:"TikTok Remittance",expected:0,dateExp:"",received:0,dateRec:""},
+];
+let dateFrom="",dateTo="",bChart,pChart,cBar,mBar;
+
+const fmt=n=>`₱${Number(n||0).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+const fmtN=n=>Number(n||0).toLocaleString("en-PH");
+const pct=n=>`${Number(n||0).toFixed(1)}%`;
+const getFixed=()=>parseFloat(document.getElementById("fixedMonthly")?.value)||148839;
+const getOther=()=>parseFloat(document.getElementById("otherExp")?.value)||0;
+
+function toast(msg,ok=true){const t=document.getElementById("toast");t.textContent=msg;t.style.background=ok?"#008060":"#D72C0D";t.classList.add("show");setTimeout(()=>t.classList.remove("show"),3000);}
+
+function showTab(id,el){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".sb-item,.bn-item").forEach(t=>t.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  // Highlight matching sidebar and bottom nav items
+  document.querySelectorAll(".sb-item,.bn-item").forEach(t=>{
+    if(t.getAttribute("onclick")&&t.getAttribute("onclick").includes("'"+id+"'"))t.classList.add("active");
+  });
+  render();
+}
+
+function openModal(){document.getElementById("syncModal").classList.add("open");}
+function closeModal(){document.getElementById("syncModal").classList.remove("open");}
+document.getElementById("syncModal").addEventListener("click",e=>{if(e.target.id==="syncModal")closeModal();});
+
+function setPreset(p,el){
+  document.querySelectorAll(".dt").forEach(b=>b.classList.remove("active"));
+  el.classList.add("active");
+  document.getElementById("custom-inputs").style.display=p==="custom"?"flex":"none";
+  const now=new Date(),pad=n=>String(n).padStart(2,"0");
+  const fd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const today=fd(now);
+  if(p==="today"){dateFrom=today;dateTo=today;}
+  else if(p==="yesterday"){const y=fd(new Date(now-86400000));dateFrom=y;dateTo=y;}
+  else if(p==="7d"){dateFrom=fd(new Date(now-7*86400000));dateTo=today;}
+  else if(p==="30d"){dateFrom=fd(new Date(now-30*86400000));dateTo=today;}
+  else if(p==="mtd"){dateFrom=`${now.getFullYear()}-${pad(now.getMonth()+1)}-01`;dateTo=today;}
+  const rp=document.getElementById("range-pill");
+  if(p!=="custom"&&rp)rp.textContent=`${dateFrom} → ${dateTo}`;
+  const ps=document.getElementById("page-sub");
+  if(ps)ps.textContent=`${dateFrom} → ${dateTo}`;
+  if(DATA)render();
+}
+
+function customRange(){
+  dateFrom=document.getElementById("df").value;
+  dateTo=document.getElementById("dt2").value;
+  document.getElementById("range-pill").textContent=`${dateFrom} → ${dateTo}`;
+  if(DATA)render();
+}
+
+async function syncData(){
+  const url=document.getElementById("webAppUrl").value.trim();
+  const msg=document.getElementById("main-msg");
+  if(!url.includes("script.google.com/macros")){msg.innerHTML=`<div class="msg merr">Please paste your Apps Script Web App URL</div>`;return;}
+  msg.innerHTML=`<div class="msg minfo">Syncing...</div>`;
+  document.getElementById("sync-status").textContent="Syncing...";
+  try{
+    const params=dateFrom?`?dateFrom=${dateFrom}&dateTo=${dateTo}`:"";
+    const res=await fetch(url+params,{redirect:"follow"});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    DATA=await res.json();
+    if(DATA.error)throw new Error(DATA.error);
+    render();
+    const m=`${DATA.totalOrders} orders synced`;
+    msg.innerHTML=`<div class="msg mok">✓ ${m} — ${DATA.lastUpdated}</div>`;
+    document.getElementById("sync-status").textContent=`Synced ${DATA.lastUpdated}`;
+    document.getElementById("sb-status").textContent=`Synced ${DATA.lastUpdated}`;
+    toast("✓ "+m);
+    setTimeout(()=>closeModal(),1800);
+    setTimeout(syncData,60*60*1000);
+  }catch(e){
+    msg.innerHTML=`<div class="msg merr">${e.message}</div>`;
+    document.getElementById("sync-status").textContent="Sync failed";
+    toast(e.message,false);
+  }
+}
+
+let chartOpts={responsive:true,plugins:{legend:{labels:{color:"#6D7175",font:{size:11}}}},scales:{x:{ticks:{color:"#6D7175"},grid:{color:"#F6F6F7"}},y:{ticks:{color:"#6D7175"},grid:{color:"#EBEBEB"}}}};
+
+function render(){
+  if(!DATA)return;
+  const P=DATA.platforms||{};
+  const tGross=Object.values(P).reduce((s,p)=>s+(p.grossSales||0),0);
+  const tCogs=Object.values(P).reduce((s,p)=>s+(p.cogs||0),0);
+  const tFees=Object.values(P).reduce((s,p)=>s+(p.platformFees||0),0);
+  const tShip=Object.values(P).reduce((s,p)=>s+(p.shippingFees||0),0);
+  const tNet=Object.values(P).reduce((s,p)=>s+(p.netRevenue||0),0);
+  const tOrds=Object.values(P).reduce((s,p)=>s+(p.orders||0),0);
+  const days=(DATA.daily||[]).length||1;
+  const fixedTotal=days*(getFixed()/30)+getOther();
+  const adSpend=META.spend||0;
+  const netProfit=tGross-tCogs-tFees-tShip-adSpend-fixedTotal;
+  const margin=tGross>0?netProfit/tGross*100:0;
+  const roas=adSpend>0?(tNet/adSpend).toFixed(2):"—";
+  const aov=tOrds>0?tGross/tOrds:0;
+  const da=document.getElementById("daily-alloc");if(da)da.textContent=fmt(getFixed()/30);
+
+  // KPIs
+  const ek=document.getElementById("exec-kpis");
+  if(ek)ek.innerHTML=[
+    {l:"Total Sales",v:fmt(tGross),s:`${fmtN(tOrds)} orders`,i:"💰",c:"green"},
+    {l:"Net Revenue",v:fmt(tNet),s:"After fees & COGS",i:"📊",c:"blue"},
+    {l:"Ad Spend",v:fmt(adSpend),s:`ROAS ${roas}x`,i:"📣",c:"orange"},
+    {l:"Net Profit",v:fmt(netProfit),s:`${pct(margin)} margin`,i:"🎯",c:netProfit>=0?"green":"red"},
+  ].map(c=>`<div class="kpi-card">
+    <div class="kpi-label">${c.i} ${c.l}</div>
+    <div class="kpi-value" style="color:${c.c==="green"?"var(--green)":c.c==="red"?"var(--red)":c.c==="blue"?"var(--blue)":"var(--orange)"}">${c.v}</div>
+    <div class="kpi-change">${c.s}</div>
+  </div>`).join("");
+
+  // Charts
+  const bl=document.getElementById("barChart");
+  if(bl){if(bChart)bChart.destroy();
+  bChart=new Chart(bl,{type:"bar",data:{labels:PLATFORMS.map(p=>p.replace(" Shop","").replace(" POS","")),datasets:[
+    {label:"Gross Sales",data:PLATFORMS.map(p=>P[p]?.grossSales||0),backgroundColor:"#B3D9CF",borderRadius:4},
+    {label:"Gross Profit",data:PLATFORMS.map(p=>P[p]?.grossProfit||0),backgroundColor:"#008060",borderRadius:4}
+  ]},options:{...chartOpts,scales:{x:{ticks:{color:"#6D7175"},grid:{display:false}},y:{ticks:{color:"#6D7175",callback:v=>`₱${(v/1000).toFixed(0)}k`},grid:{color:"#EBEBEB"}}}}});}
+
+  const pd=PLATFORMS.filter(p=>(P[p]?.grossSales||0)>0);
+  const pl=document.getElementById("pieChart");
+  if(pl){if(pChart)pChart.destroy();
+  if(pd.length)pChart=new Chart(pl,{type:"doughnut",data:{labels:pd,datasets:[{data:pd.map(p=>P[p].grossSales),backgroundColor:pd.map(p=>PC[p]),borderWidth:3,borderColor:"#fff",hoverOffset:4}]},options:{responsive:true,plugins:{legend:{position:"right",labels:{color:"#6D7175",font:{size:11},boxWidth:10,padding:12}}}}});}
+
+  // P&L
+  const plr=document.getElementById("pl-rows");
+  if(plr)plr.innerHTML=[
+    {l:"Gross Revenue",v:tGross,t:"inc"},{l:"COGS",v:tCogs,t:"exp"},
+    {l:"Platform Fees",v:tFees,t:"exp"},{l:"Shipping Fees",v:tShip,t:"exp"},
+    {l:"Meta Ad Spend",v:adSpend,t:"exp"},{l:`Fixed Costs (${days} days)`,v:fixedTotal,t:"exp"},
+    {l:"Other Expenses",v:getOther(),t:"exp"},
+  ].map((r,i)=>`<div class="pl-row ${i%2===0?"alt":""}">
+    <span style="font-size:13px;color:var(--sub)">${r.l}</span>
+    <span style="font-weight:600;color:${r.t==="inc"?"var(--green)":"var(--red)"}">${r.t==="exp"?"−":""}${fmt(r.v)}</span>
+  </div>`).join("")+`<div class="pl-total">
+    <div><div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:2px">NET PROFIT</div><div style="font-size:11px;color:var(--muted)">${pct(margin)} net margin</div></div>
+    <div style="font-size:22px;font-weight:800;color:${netProfit>=0?"var(--green)":"var(--red)"};">${fmt(netProfit)}</div>
+  </div>`;
+
+  // Metrics
+  const em=document.getElementById("exec-metrics");
+  if(em)em.innerHTML=[
+    {l:"Average Order Value",v:fmt(aov)},
+    {l:"Gross Margin",v:pct(tGross>0?(tGross-tCogs-tFees-tShip)/tGross*100:0)},
+    {l:"Net Margin",v:pct(margin)},
+    {l:"COGS %",v:pct(tGross>0?tCogs/tGross*100:0)},
+    {l:"Platform Fees %",v:pct(tGross>0?tFees/tGross*100:0)},
+    {l:"Ad Spend %",v:pct(tGross>0?adSpend/tGross*100:0)},
+    {l:"Fixed Cost %",v:pct(tGross>0?fixedTotal/tGross*100:0)},
+    {l:"Break-even Orders",v:fmtN(Math.ceil((fixedTotal+adSpend)/(aov||455)))},
+  ].map(m=>`<div class="mrow"><span style="font-size:13px;color:var(--sub)">${m.l}</span><span style="font-size:13px;font-weight:700">${m.v}</span></div>`).join("");
+
+  renderDaily(days,fixedTotal,adSpend);
+  renderChannel(P,tGross,tCogs,tFees,tShip,adSpend,fixedTotal);
+  renderProducts(tGross);
+  renderCalc();renderCOGS();renderAdsKPIs();renderRemit();
+}
+
+function renderDaily(days,fixedTotal,adSpend){
+  const db=document.getElementById("daily-body");if(!db||!DATA)return;
+  const df=fixedTotal/(days||1),da=adSpend/(days||1);
+  let tot={o:0,g:0,c:0,f:0,p:0};
+  db.innerHTML=(DATA.daily||[]).map(d=>{
+    const pr=d.grossSales-d.cogs-d.platformFees-d.shippingFees-da-df;
+    const m=d.grossSales>0?pr/d.grossSales*100:0;
+    tot.o+=d.orders;tot.g+=d.grossSales;tot.c+=d.cogs;tot.f+=d.platformFees;tot.p+=pr;
+    return`<tr><td style="font-weight:600">${d.date}</td><td class="tr">${d.orders}</td>
+      <td class="tr">${fmt(d.grossSales)}</td>
+      <td class="tr" style="color:var(--red)">−${fmt(d.cogs)}</td>
+      <td class="tr" style="color:var(--red)">−${fmt(d.platformFees)}</td>
+      <td class="tr" style="color:var(--red)">−${fmt(da)}</td>
+      <td class="tr" style="color:var(--red)">−${fmt(df)}</td>
+      <td class="tr" style="font-weight:700;color:${pr>=0?"var(--green)":"var(--red)"}">${fmt(pr)}</td>
+      <td class="tr"><span class="badge ${m>=0?"b-green":"b-red"}">${pct(m)}</span></td></tr>`;
+  }).join("")+`<tr class="tf"><td>Total</td><td class="tr">${tot.o}</td><td class="tr">${fmt(tot.g)}</td>
+    <td class="tr" style="color:var(--red)">−${fmt(tot.c)}</td><td class="tr" style="color:var(--red)">−${fmt(tot.f)}</td>
+    <td class="tr" style="color:var(--red)">−${fmt(adSpend)}</td><td class="tr" style="color:var(--red)">−${fmt(fixedTotal)}</td>
+    <td class="tr" style="color:${tot.p>=0?"var(--green)":"var(--red)"}">${fmt(tot.p)}</td>
+    <td class="tr"><span class="badge ${tot.p>=0?"b-green":"b-red"}">${pct(tot.g>0?tot.p/tot.g*100:0)}</span></td></tr>`;
+
+  const dk=document.getElementById("daily-kpis");
+  if(dk)dk.innerHTML=[
+    {l:"Avg Daily Revenue",v:fmt(tot.g/(days||1))},{l:"Avg Daily Orders",v:fmtN(Math.round(tot.o/(days||1)))},
+    {l:"Best Day",v:fmt(Math.max(...(DATA.daily||[]).map(d=>d.grossSales-d.cogs-d.platformFees-d.shippingFees-adSpend/(days||1)-fixedTotal/(days||1))))},
+    {l:"Total Net Profit",v:fmt(tot.p)},
+  ].map(c=>`<div class="kpi-card"><div class="kpi-label">${c.l}</div><div class="kpi-value">${c.v}</div></div>`).join("");
+}
+
+function renderChannel(P,tGross,tCogs,tFees,tShip,adSpend,fixedTotal){
+  const cb=document.getElementById("channel-body");if(!cb)return;
+  cb.innerHTML="";
+  const pl5=["Shopee","Lazada","TikTok Shop","Webcake","Pancake POS"];
+  const tP={grossSales:tGross,orders:Object.values(P).reduce((s,p)=>s+(p.orders||0),0),cogs:tCogs,platformFees:tFees,shippingFees:tShip,grossProfit:tGross-tCogs-tFees-tShip};
+  [
+    {l:"Orders",f:"orders",fn:fmtN},
+    {l:"Gross Revenue",f:"grossSales",fn:fmt},
+    {l:"COGS",f:"cogs",fn:fmt,neg:true},
+    {l:"Platform Fees",f:"platformFees",fn:fmt,neg:true},
+    {l:"Shipping",f:"shippingFees",fn:fmt,neg:true},
+    {l:"Gross Profit",f:"grossProfit",fn:fmt,bold:true},
+    {l:"Gross Margin",f:"_m",fn:(v,p)=>pct(p.grossSales>0?p.grossProfit/p.grossSales*100:0),bold:true},
+    {l:"Avg Order Value",f:"_a",fn:(v,p)=>p.orders>0?fmt(p.grossSales/p.orders):"—"},
+  ].forEach((r,i)=>{
+    const tr=document.createElement("tr");
+    if(i===5||i===6)tr.style.background=i===5?"#F1F8F5":"";
+    tr.innerHTML=`<td style="font-weight:${r.bold?700:400};color:${r.bold?"var(--text)":"var(--sub)"}">${r.l}</td>`+
+      pl5.map(pl=>{const p=P[pl]||{};const v=r.f.startsWith("_")?r.fn(0,p):p[r.f]||0;
+        return`<td class="tr" style="color:${r.neg?"var(--red)":r.bold?"var(--green)":"var(--text)"}">${r.fn?r.fn(v,p):v}</td>`;
+      }).join("")+
+      `<td class="tr" style="font-weight:700;color:${r.bold?"var(--green)":"var(--text)"}">${r.f.startsWith("_")?r.fn(0,tP):r.fn?r.fn(tP[r.f]||0,tP):""}</td>`;
+    cb.appendChild(tr);
+  });
+
+  if(cBar)cBar.destroy();const cl=document.getElementById("channelBar");
+  if(cl)cBar=new Chart(cl,{type:"bar",data:{labels:pl5.map(p=>p.replace(" Shop","").replace(" POS","")),datasets:[{data:pl5.map(p=>P[p]?.grossProfit||0),backgroundColor:pl5.map(p=>PC[p]),borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#6D7175"},grid:{display:false}},y:{ticks:{color:"#6D7175",callback:v=>`₱${(v/1000).toFixed(0)}k`},grid:{color:"#EBEBEB"}}}}});
+  if(mBar)mBar.destroy();const ml=document.getElementById("marginBar");
+  if(ml)mBar=new Chart(ml,{type:"bar",data:{labels:pl5.map(p=>p.replace(" Shop","").replace(" POS","")),datasets:[{data:pl5.map(p=>{const d=P[p];return d?.grossSales>0?(d.grossProfit/d.grossSales*100).toFixed(1):0;}),backgroundColor:"#B3D9CF",borderColor:"#008060",borderWidth:2,borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#6D7175"},grid:{display:false}},y:{ticks:{color:"#6D7175",callback:v=>`${v}%`},grid:{color:"#EBEBEB"}}}}});
+}
+
+function renderProducts(tGross){
+  const pb=document.getElementById("product-body");if(!pb||!DATA)return;
+  const prods=DATA.products||[];
+  if(!prods.length){pb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="e-icon">📦</div><div class="e-text">Sync data to see product rankings</div></div></td></tr>`;return;}
+  pb.innerHTML=prods.map((p,i)=>{
+    const m=p.revenue>0?p.grossProfit/p.revenue*100:0;
+    return`<tr>
+      <td style="font-weight:700;color:${i<3?"#916A00":"var(--muted)"}">${i<3?["🥇","🥈","🥉"][i]:`#${i+1}`}</td>
+      <td><div style="font-weight:600;font-size:13px">${p.name}</div><div style="font-size:11px;color:var(--muted)">${p.sku}</div></td>
+      <td class="tr" style="font-weight:600">${fmtN(p.units)}</td>
+      <td class="tr">${fmt(p.revenue)}</td>
+      <td class="tr" style="color:var(--red)">−${fmt(p.cogs)}</td>
+      <td class="tr" style="font-weight:700;color:${p.grossProfit>=0?"var(--green)":"var(--red)"}">${fmt(p.grossProfit)}</td>
+      <td class="tr"><span class="badge ${m>=50?"b-green":m>=30?"b-yellow":"b-red"}">${pct(m)}</span></td>
+      <td><span class="badge ${m>=50?"b-green":m>=30?"b-yellow":"b-red"}">${m>=50?"Top":"Review"}</span></td>
+    </tr>`;
+  }).join("");
+}
+
+function renderCalc(){
+  const t=document.getElementById("calc-table");if(!t)return;
+  const price=parseFloat(document.getElementById("calc-price")?.value)||455;
+  const cogs=parseFloat(document.getElementById("calc-cogs")?.value)||158.83;
+  const chs=Object.entries(FEES_CALC);
+  t.innerHTML=`<thead><tr><th>Metric</th>${chs.map(([k])=>`<th style="text-align:center">${k}</th>`).join("")}</tr></thead><tbody>`+
+  [
+    {l:"Selling Price",fn:()=>fmt(price)},
+    {l:"COGS per Unit",fn:()=>fmt(cogs),neg:true},
+    {l:"Fee Rate %",fn:([,v])=>pct(v.rate*100),neg:true},
+    {l:"Platform Fee (₱)",fn:([,v])=>fmt(price*v.rate),neg:true},
+    {l:"Gross Profit / Unit",fn:([,v])=>fmt(price-cogs-price*v.rate),section:true},
+    {l:"Gross Margin %",fn:([,v])=>pct(price>0?(price-cogs-price*v.rate)/price*100:0),section:true},
+  ].map(r=>`<tr${r.section?" class='section'":""}><td>${r.l}</td>${chs.map(ch=>{
+    const v=r.fn(ch);
+    const profit=price-cogs-price*ch[1].rate;
+    return`<td class="${r.section?(profit>=0?"pos":"neg"):r.neg?"neg":""}">${v}</td>`;
+  }).join("")}</tr>`).join("")+"</tbody>";
+}
+
+function renderCOGS(){
+  const cb=document.getElementById("cogs-body");if(!cb)return;
+  cb.innerHTML=COGS_DB.map(p=>`<tr>
+    <td><span class="badge b-gray">${p.sku}</span></td>
+    <td>${p.name}</td><td class="tr">${fmt(p.purchase)}</td>
+    <td class="tr">${fmt(p.shipping)}</td><td class="tr">${fmt(p.packaging)}</td>
+    <td class="tr" style="font-weight:700;color:var(--green)">${fmt(p.landed)}</td>
+    <td style="color:var(--muted);font-size:12px">${p.supplier}</td>
+  </tr>`).join("");
+}
+
+function renderAdsKPIs(){
+  const el=document.getElementById("ads-kpis");if(!el)return;
+  const tNet=DATA?Object.values(DATA.platforms||{}).reduce((s,p)=>s+(p.netRevenue||0),0):0;
+  const roas=META.spend>0?(tNet/META.spend).toFixed(2):"—";
+  el.innerHTML=[
+    {l:"Total Spend",v:fmt(META.spend)},{l:"Impressions",v:fmtN(META.impressions)},
+    {l:"Clicks",v:fmtN(META.clicks)},{l:"ROAS",v:META.spend>0?`${roas}x`:"—"},
+  ].map(c=>`<div class="kpi-card"><div class="kpi-label">${c.l}</div><div class="kpi-value">${c.v}</div></div>`).join("");
+}
+
+function renderRemit(){
+  const rc=document.getElementById("remit-cards");
+  const rk=document.getElementById("remit-kpis");if(!rc||!rk)return;
+  const tExp=REMIT.reduce((s,r)=>s+r.expected,0),tRec=REMIT.reduce((s,r)=>s+r.received,0);
+  rk.innerHTML=[
+    {l:"Total Expected",v:fmt(tExp)},{l:"Total Received",v:fmt(tRec),c:"green"},
+    {l:"Outstanding",v:fmt(tExp-tRec),c:"red"},
+  ].map(c=>`<div class="kpi-card"><div class="kpi-label">${c.l}</div><div class="kpi-value" style="color:${c.c==="green"?"var(--green)":c.c==="red"?"var(--red)":"var(--text)"}">${c.v}</div></div>`).join("");
+  rc.innerHTML=REMIT.map(r=>{
+    const s=r.received>=r.expected&&r.expected>0?"Received":r.received>0?"Partial":"Pending";
+    const pct2=r.expected>0?Math.min(100,r.received/r.expected*100):0;
+    const fc=s==="Received"?"var(--green)":s==="Partial"?"var(--orange)":"var(--red)";
+    return`<div class="remit-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:600">${r.source}</span>
+        <span class="badge ${s==="Received"?"b-green":s==="Partial"?"b-yellow":"b-red"}">${s}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct2}%;background:${fc}"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:8px">
+        <div><div style="font-size:10px;color:var(--muted);margin-bottom:3px">Expected</div><input type="number" value="${r.expected||""}" class="inp" style="font-size:12px;padding:6px 8px" placeholder="0" oninput="updR(${r.id},'expected',this.value)"/></div>
+        <div><div style="font-size:10px;color:var(--muted);margin-bottom:3px">Date Exp.</div><input type="date" value="${r.dateExp}" class="inp" style="font-size:12px;padding:6px 8px" oninput="updR(${r.id},'dateExp',this.value)"/></div>
+        <div><div style="font-size:10px;color:var(--muted);margin-bottom:3px">Received</div><input type="number" value="${r.received||""}" class="inp" style="font-size:12px;padding:6px 8px" placeholder="0" oninput="updR(${r.id},'received',this.value)"/></div>
+        <div><div style="font-size:10px;color:var(--muted);margin-bottom:3px">Date Rec.</div><input type="date" value="${r.dateRec}" class="inp" style="font-size:12px;padding:6px 8px" oninput="updR(${r.id},'dateRec',this.value)"/></div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+async function fetchMeta(){
+  const token=document.getElementById("metaToken").value.trim();
+  const acct=document.getElementById("metaAcct").value.trim();
+  const period=document.getElementById("metaPeriod").value;
+  const msg=document.getElementById("ads-msg");
+  if(!token||!acct){msg.innerHTML=`<div class="msg merr">Enter Access Token and Ad Account ID</div>`;return;}
+  msg.innerHTML=`<div class="msg minfo">Connecting...</div>`;
+  try{
+    const fields="spend,impressions,clicks,reach,actions,campaign_name";
+    const res=await fetch(`https://graph.facebook.com/v18.0/act_${acct}/insights?fields=${fields}&date_preset=${period}&level=campaign&access_token=${token}`);
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const camps=(data.data||[]).map(c=>({name:c.campaign_name,spend:parseFloat(c.spend||0),impressions:parseInt(c.impressions||0),clicks:parseInt(c.clicks||0),reach:parseInt(c.reach||0),purchases:parseInt((c.actions||[]).find(a=>a.action_type==="purchase")?.value||0)}));
+    META={spend:camps.reduce((s,c)=>s+c.spend,0),impressions:camps.reduce((s,c)=>s+c.impressions,0),clicks:camps.reduce((s,c)=>s+c.clicks,0),reach:camps.reduce((s,c)=>s+c.reach,0),purchases:camps.reduce((s,c)=>s+c.purchases,0),campaigns:camps,synced:true};
+    const tNet=DATA?Object.values(DATA.platforms||{}).reduce((s,p)=>s+(p.netRevenue||0),0):0;
+    const roas=META.spend>0?(tNet/META.spend).toFixed(2):"—";
+    document.getElementById("campaign-body").innerHTML=camps.length?camps.map(c=>`<tr>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</td>
+      <td class="tr" style="font-weight:600">${fmt(c.spend)}</td>
+      <td class="tr">${fmtN(c.impressions)}</td><td class="tr">${fmtN(c.clicks)}</td>
+      <td class="tr">${c.impressions>0?(c.clicks/c.impressions*100).toFixed(2):0}%</td>
+      <td class="tr">${fmtN(c.purchases)}</td>
+      <td class="tr">${c.purchases>0?fmt(c.spend/c.purchases):"—"}</td>
+      <td class="tr" style="font-weight:700;color:var(--green)">${META.spend>0&&tNet>0?(tNet/META.spend).toFixed(2)+"x":"—"}</td>
+    </tr>`).join(""):`<tr><td colspan="8"><div class="empty"><div class="e-text">No campaigns for this period</div></div></td></tr>`;
+    render();toast(`✓ ${camps.length} campaigns loaded | ROAS ${roas}x`);
+    msg.innerHTML=`<div class="msg mok">✓ ${camps.length} campaigns | ${fmt(META.spend)} spend | ROAS ${roas}x</div>`;
+  }catch(e){msg.innerHTML=`<div class="msg merr">${e.message}</div>`;toast(e.message,false);}
+}
+
+function updR(id,f,v){const r=REMIT.find(r=>r.id===id);if(r){r[f]=["expected","received"].includes(f)?parseFloat(v)||0:v;renderRemit();}}
+
+setInterval(()=>{
+  const el=document.getElementById("clock-display");
+  if(el){const now=new Date();el.textContent=now.toLocaleString("en-PH",{weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});}
+},1000);
+
+setPreset("30d",document.querySelectorAll(".dt")[3]);
+renderCalc();renderCOGS();renderAdsKPIs();renderRemit();
+</script>
+</body>
+</html>
